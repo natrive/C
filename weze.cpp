@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 #define WIN 1
 
 #if (WIN > 0)
@@ -29,11 +28,11 @@ void SetTekstKolor(short kolor)
 
 //---------------------------------------------------------------------------
 //! Drukuj tekst wg bie¿¹cego atrybutu
-void PutZnak(char* znak)
+void PutZnak(char znak)
 {
   unsigned long count;
 
-  WriteConsole(hStdOut, znak, 1, &count, NULL);
+  WriteConsole(hStdOut, &znak, 1, &count, NULL);
 } // PutZnak
 
 //---------------------------------------------------------------------------
@@ -95,80 +94,94 @@ void PrzygotujEkran(void)
 
 #endif
 
+#define ROZMIAR 20 // okreœla d³ugoœæ boku rysowanego kwadratu
 
+/*
+	AAA 
+	BBB  => wyniki koñcowy dla ROZMIAR = 3
+	CCC 
+*/
 
 //---------------------------------------------------------------------------
 //! G³ówne wejœcie do programu
 int main(int argc, char* argv[])
 {
-	short a = 0, i = 0, j = 0, obrot = -1;
-	char pom = 'A', koniec = ' ';
-	const char* znak = &pom;
-	PrzygotujEkran();
+	short
+		wiersz = 0, 
+		kolumna = 0, 
+		iteracje = 0; // zmienna pomocnicza "zacieœniaj¹ca" wnêtrze kwadratu, zwiêksza siê po dotarciu do lewego górnego rogu
+
+	char koniec = ' '; // wczytywany znak, gdy 'q' koniec pêtli
+
+	bool obrot = false; // kontrola, czy zosta³o wykonane pe³ne przejœcie 
+
+	PrzygotujEkran(); // przygotowanie mapy, do której bêd¹ wpisywane znaki - na odpowiednich wspó³rzêdnych
+
+	// pêtla ustawia znak w pozycji okreœlonej przez wspó³rzêdne 'kolumna' oraz 'wiersz', a nastêpnie zmienia wartoœæ wspó³rzêdnych w zale¿noœci od ich obecnej wartoœci
 	while (koniec != 'q')
 	{
 		koniec = getchar();
-		SetKursorPoz(i, a);
-		PutZnak((char*)znak);
+		SetKursorPoz(kolumna, wiersz);
+		PutZnak('A'+wiersz);
 		
-		gora:
-		if (i == j && a == j && obrot == 1)
+		// przypisz wartoœci dla rysowania gornej krawedzi
+		// lewy górny róg
+		if (kolumna == iteracje && wiersz == iteracje && obrot == true)
 		{
-			j++;
-			obrot = -1;
-			i++;
-			a++;
-			pom = znak[0] + 1;
+			iteracje++;
+			obrot = false;
+			kolumna++;
+			wiersz++;
 		}
-		else if (i <20-j && a == 0+j)
+		// góra
+		else if (kolumna < ROZMIAR - iteracje && wiersz == iteracje)
 		{
-			i++;
+			kolumna++;
 		}
+		// górna krawêdŸ
 
-		prawo:
-		if (i == 20-j && a == 0+j)
+		// przypisz wartoœci dla rysowania prawej krawedzi
+		// prawy górny róg
+		if (kolumna == ROZMIAR - iteracje && wiersz == iteracje)
 		{
-			i--;
-			pom = znak[0] + 1;
-			a++;
+			kolumna--;
+			wiersz++;
 		}
-		else if (a > 0+j && a < 21-j && i == 19-j)
+		// prawo
+		else if (wiersz > iteracje && wiersz < ROZMIAR+1 - iteracje && kolumna == ROZMIAR-1 - iteracje)
 		{
-			pom = znak[0] + 1;
-			a++;
+			wiersz++;
 		}
+		// prawa krawêdŸ
 
-		dol:
-		if (a == 20 - j && i == 19 - j)
+		//przypisz wartoœci dla rysowania dolnej krawêdzi
+		// prawy dolny róg
+		if (wiersz == ROZMIAR - iteracje && kolumna == ROZMIAR-1 - iteracje)
 		{
-			pom = znak[0] - 1;
-			i--;
-			a--;
+			kolumna--;
+			wiersz--;
 		}
-		else if (a == 19 - j && i > -1 + j && i < 19 - j)
+		// dó³
+		else if (wiersz == ROZMIAR-1 - iteracje && kolumna > -1 + iteracje && kolumna < ROZMIAR-1 - iteracje)
 		{
-			i--;
+			kolumna--;
 		}
+		// dolna krawedz
 
-		lewo:
-		if (i == -1+j && a == 19-j)
+		// przypisz wartosci dla rysowania lewej krawêdzi
+		// lewy dolny róg
+		if (kolumna == -1 + iteracje && wiersz == ROZMIAR-1 - iteracje)
 		{
-			pom = znak[0] - 1;
-			a--;
-			i++;
+			wiersz--;
+			kolumna++;
+			obrot = true;
 		}
-		else if (i == 0+j && a > 0+j && a < 19-j)
+		// lewo
+		else if (kolumna == iteracje && wiersz > iteracje && wiersz < ROZMIAR-1 - iteracje)
 		{
-			pom = znak[0] - 1;
-			a--;
-			obrot = 1;
+			wiersz--;
 		}
-
+		// lewa krawêdŸ
 	}
-  
-// return 0;
-} // main
-
-
-// eof: weze.cpp
-
+	return 0;
+} 
